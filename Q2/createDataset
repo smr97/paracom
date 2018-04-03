@@ -1,0 +1,7 @@
+#!bin/bash
+
+rm -r D32B4;
+rm -r D8B16;
+python createDataset.py 32 4;
+python createDataset.py 8 16;
+python createDataset.py 2 256;
