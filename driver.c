@@ -6,7 +6,7 @@
 #include <omp.h>
 #include <time.h>
 
-#define THREADCOUNT 4
+#define THREADCOUNT 10
 
 volatile int busy[THREADCOUNT];
 volatile int f[16];	//Cache line aligned
@@ -18,13 +18,17 @@ double st, en;
 int** generate_matrix(int size){
 	int** data = (int**) malloc(size*sizeof(int*));
 	int i = 0;
-	for(; i<size; i++){
+	for(i = 0; i<size; i++){
 		data[i] = (int*) malloc(size*sizeof(int));
 	}
-	int j;
-	for(i = 0; i<size; i++){
-		for(j = 0; j<size; j++){
-			data[i][j] = i*size+j;
+	#pragma omp parallel num_threads(THREADCOUNT)
+	{
+		int x, y;
+		int compute_block = size/THREADCOUNT;
+		for(x = omp_get_thread_num()*compute_block; x<((omp_get_thread_num()+1)*compute_block)&&x<size; x++){
+			for(y = 0; y<size; y++){
+				data[x][y] = x*size+y;
+			}
 		}
 	}
 	return data;
@@ -42,14 +46,14 @@ void notfound(stack* s){
 		return;
 	f[0] = 1;
 	en = omp_get_wtime();
-	printf("element not found, time:%lf\n", en-st);
+	//printf("element not found, time:%lf\n", en-st);
 }
 
 void found(int row, int col){
 	clock_gettime(CLOCK_THREAD_CPUTIME_ID, end+omp_get_thread_num());
 	f[0] = 1;
 	en = omp_get_wtime();
-	printf("Found %d at (%d, %d). Time taken:%lf\n", elem, row, col, en-st);//(end[omp_get_thread_num()].tv_nsec-start[omp_get_thread_num()].tv_nsec)/1000);
+	//printf("Found %d at (%d, %d). Time taken:%lf\n", elem, row, col, en-st);//(end[omp_get_thread_num()].tv_nsec-start[omp_get_thread_num()].tv_nsec)/1000);
 }
 
 void prod_consume(int** mat, stack* s){

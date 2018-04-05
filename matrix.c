@@ -1,7 +1,7 @@
 #include "stack.h"
 #include <stdlib.h>
 #include <stdio.h>
-#define THRESH 100000
+#define THRESH 10000
 
 extern void found(int, int);
 extern int elem;
